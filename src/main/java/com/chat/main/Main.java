@@ -3,10 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package main;
+package com.chat.main;
 
-import server.FileConfig;
-import server.Server;
+import com.chat.server.FileConfig;
+import com.chat.server.Server;
 
 /**
  *

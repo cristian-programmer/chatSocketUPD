@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package server;
+package com.chat.server;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -24,7 +24,7 @@ public class FileConfig {
         this.IPServer =  IPServer;
     }
     public void readFileConfig(){
-        File config = new File("D:\\Documents\\NetBeansProjects\\ChatServer\\src\\main\\java\\config\\config.cf");
+        File config = new File("D:\\Documents\\NetBeansProjects\\ChatServer\\src\\main\\java\\com\\chat\\config\\config.cf");
         try {
               FileReader fileReader = new FileReader(config);
               BufferedReader buffer =  new BufferedReader(fileReader);
