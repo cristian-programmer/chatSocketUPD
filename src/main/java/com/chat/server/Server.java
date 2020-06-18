@@ -59,10 +59,11 @@ public class Server {
        }else if (action.equals(Parser.GET_ALL_USERS)){
            String users="";
            for(int i=0; i < this.usersActive.size(); i++){
-               users = users + "," + this.usersActive.get(i);
+               //users = users + "," + this.usersActive.get(i);
+               this.emit(this.usersActive.get(i));
            }
            System.out.println("Users: " +  users);
-           this.emit(users);
+           
        }
   }
     
@@ -95,10 +96,28 @@ public class Server {
         try {
             socket.receive(data_package);
             rc_message = new String(data_package.getData());
+            byte test[] = rc_message.getBytes();
+            System.out.println(test[900]);
+            
             buffer_on = new byte[3045];
             System.out.println(rc_message);
         } catch (IOException ex) {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+    
+        public String getNeededByes(byte in[]){
+        String result="";
+        boolean stop =  false;
+        for(int i=0; i< in.length; i++){
+            if(in[i] != 0){
+                char temp = (char) in[i];
+                result = result + String.valueOf(temp);
+               
+            }else {
+              break;
+            }
+        }
+        return result;
     }
 }
