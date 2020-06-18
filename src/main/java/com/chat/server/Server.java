@@ -28,8 +28,8 @@ public class Server {
     ArrayList<String> usersActive = new ArrayList();
     String rc_message;
     
-    byte[] buffer_on = new byte[3045];
-    byte[] buffer_emit = new byte[3045];
+    byte[] buffer_on = new byte[1024];
+   
     
     public void instanceServer(){
         FileConfig config = new FileConfig();
@@ -54,15 +54,19 @@ public class Server {
        String action = parser.breakMessage()[0];
        
        if(action.equals( Parser.ACTION_ADD_USER )){
-            this.registerUser(parser.breakMessage()[1]);
-            this.emit("ok");
+            String result = this.getNeededByes(parser.breakMessage()[1].getBytes());
+            this.registerUser(result);
+            String message = "ok";
+            this.emit(message.getBytes());
+            
        }else if (action.equals(Parser.GET_ALL_USERS)){
            String users="";
            for(int i=0; i < this.usersActive.size(); i++){
-               //users = users + "," + this.usersActive.get(i);
-               this.emit(this.usersActive.get(i));
+               System.out.println("Users SIZE: " + usersActive.size());
+               users = users + "," + this.usersActive.get(i);
            }
-           System.out.println("Users: " +  users);
+           this.emit(users.getBytes());
+           System.out.println("Users string: " +  users.length());
            
        }
   }
@@ -71,19 +75,18 @@ public class Server {
        this.usersActive.add(user);
    }
     
-    public void emit(String message){
+    public void emit(byte buffer_emit[]){
         
         int PORT_CLIENT = data_package.getPort();
         InetAddress IP_CLIENT =  data_package.getAddress();
-        System.out.println(message.getBytes().length);
-        buffer_emit =  message.getBytes();
-        
+        System.out.println("bytes emits: " + buffer_emit.length);
+  
         send_package = new DatagramPacket(buffer_emit, buffer_emit.length, IP_CLIENT , PORT_CLIENT);
        
         try {
             
             socket.send(send_package);
-            buffer_emit = new byte[3045];
+            buffer_emit = new byte[1024];
         } catch (IOException ex) {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         }
