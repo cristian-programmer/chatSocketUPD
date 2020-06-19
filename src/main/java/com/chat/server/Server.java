@@ -19,19 +19,24 @@ import java.util.logging.Logger;
  *
  * @author User
  */
-public class Server {
+public class Server implements Runnable{
     
     DatagramSocket socket;
     DatagramPacket data_package;
     DatagramPacket send_package;
     
     ArrayList<String> usersActive = new ArrayList();
+    ArrayList<User> usersList = new ArrayList();
+    User user;
+    int PORT_CLIENT_TEMP;
+    InetAddress IP_CLIENT_TEMP;
+    
     String rc_message;
     
     byte[] buffer_on = new byte[1024];
    
     
-    public void instanceServer(){
+    private  void instanceServer(){
         FileConfig config = new FileConfig();
         config.readFileConfig();
         System.out.println("Init Server: " + config.IPserver() + " " + config.getPort());
@@ -54,25 +59,67 @@ public class Server {
        String action = parser.breakMessage()[0];
        
        if(action.equals( Parser.ACTION_ADD_USER )){
-            String result = this.getNeededByes(parser.breakMessage()[1].getBytes());
-            this.registerUser(result);
+            String username = this.getNeededByes(parser.breakMessage()[1].getBytes());
+            this.registerUser(username);
             String message = "ok";
             this.emit(message.getBytes());
             
        }else if (action.equals(Parser.GET_ALL_USERS)){
            String users="";
-           for(int i=0; i < this.usersActive.size(); i++){
+           for(int i=0; i < this.usersList.size(); i++){
                System.out.println("Users SIZE: " + usersActive.size());
-               users = users + "," + this.usersActive.get(i);
+               System.out.println("Users SIZE: " + usersList.get(i).getUsername());
+               users = users + "," + this.usersList.get(i).getUsername();
            }
            this.emit(users.getBytes());
            System.out.println("Users string: " +  users.length());
            
+       }else if (action.equals(Parser.ACTION_SEND_MESSAGE)){
+           //format sendMessage:::user,me 10:34:45 : hola como estas?
+           String temp = parser.breakMessage()[1];
+           System.out.println("temp " + temp);
+           String user = this.getNeededByes(temp.split(",")[0].getBytes());
+           String message = this.getNeededByes(temp.split(",")[1].getBytes());
+           
+           System.out.println("USER "+ user + " MESSAGE " + message );
+           
+           //findUser(user);
+           //System.out.println("find: " + findUser(user).UserFormat());
+           this.redirectEmitByUser(message.getBytes(), findUser(user));
+           //System.out.println(form);
        }
   }
-    
-   public void registerUser(String user){
-       this.usersActive.add(user);
+   
+   public User findUser(String username){
+       for(int i=0; i< usersList.size(); i++){
+           if(usersList.get(i).getUsername().equals(username)){
+             System.out.println("Entre");
+             return usersList.get(i);
+           }
+       }
+       return null;
+   }
+   
+   public void registerUser(String username){
+       System.out.println(PORT_CLIENT_TEMP + " " + IP_CLIENT_TEMP + " " + username);
+       user = new User( PORT_CLIENT_TEMP, IP_CLIENT_TEMP, username);
+        usersList.add(user);
+   }
+   
+   public void redirectEmitByUser(byte buffer_emit[], User user){
+      System.out.println("redirect: " + user.UserFormat());
+      try {
+            if(user != null){
+                send_package = new DatagramPacket(buffer_emit, buffer_emit.length, user.getIP(), user.getPORT());    
+                socket.send(send_package);
+                buffer_emit = new byte[1024];
+            }else{
+                System.out.println("No se encontro un usuario para enviar el mensaje");
+            }
+          
+        } catch (IOException ex) {
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+        }
    }
     
     public void emit(byte buffer_emit[]){
@@ -81,10 +128,8 @@ public class Server {
         InetAddress IP_CLIENT =  data_package.getAddress();
         System.out.println("bytes emits: " + buffer_emit.length);
   
-        send_package = new DatagramPacket(buffer_emit, buffer_emit.length, IP_CLIENT , PORT_CLIENT);
-       
         try {
-            
+            send_package = new DatagramPacket(buffer_emit, buffer_emit.length, IP_CLIENT , PORT_CLIENT);    
             socket.send(send_package);
             buffer_emit = new byte[1024];
         } catch (IOException ex) {
@@ -92,12 +137,13 @@ public class Server {
         }
     }
     
-    
     public void on(){
         data_package = new DatagramPacket(buffer_on, buffer_on.length);
-      
+        
         try {
             socket.receive(data_package);
+            PORT_CLIENT_TEMP = data_package.getPort();
+            IP_CLIENT_TEMP = data_package.getAddress();
             rc_message = new String(data_package.getData());
             byte test[] = rc_message.getBytes();
             System.out.println(test[900]);
@@ -109,7 +155,7 @@ public class Server {
         }
     }
     
-        public String getNeededByes(byte in[]){
+    public String getNeededByes(byte in[]){
         String result="";
         boolean stop =  false;
         for(int i=0; i< in.length; i++){
@@ -122,5 +168,41 @@ public class Server {
             }
         }
         return result;
+    }
+
+    @Override
+    public void run() {
+        this.instanceServer();
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    private class User{
+        private int PORT;
+        private InetAddress IP;
+        private String username;
+
+        public User(int PORT, InetAddress IP, String username){
+            this.PORT = PORT;
+            this.IP = IP;
+            this.username =  username;
+        }
+        
+        public int getPORT() {
+            return PORT;
+        }
+
+        public InetAddress getIP() {
+            return IP;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+        
+        public String UserFormat(){
+            //ip;port;user,
+            return getIP().toString() + ";" + getPORT() + ";" + getUsername();
+        }
+        
     }
 }

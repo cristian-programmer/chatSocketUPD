@@ -12,7 +12,7 @@ package com.chat.server;
 public class Parser {
     final static String SYMBOL = ":::";
     final static String ACTION_ADD_USER = "addUser";
-    final static String ACTION_SEND_MESSAGE = "form";
+    final static String ACTION_SEND_MESSAGE = "sendMessage";
     final static String GET_ALL_USERS="getUsers";
 
     public String message; 

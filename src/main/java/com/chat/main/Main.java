@@ -15,6 +15,7 @@ import com.chat.server.Server;
 public class Main {
     public static void main(String[] args) {
         Server serverSocketUDP = new Server();
-        serverSocketUDP.instanceServer();
+        Thread multiServer = new Thread(serverSocketUDP);
+        multiServer.start();
     }
 }
