@@ -59,36 +59,74 @@ public class Server implements Runnable{
        String action = parser.breakMessage()[0];
        
        if(action.equals( Parser.ACTION_ADD_USER )){
-            String username = this.getNeededByes(parser.breakMessage()[1].getBytes());
+            String username = this.getNeededBytes(parser.breakMessage()[1].getBytes());
             this.registerUser(username);
             String message = "ok";
             this.emit(message.getBytes());
             
        }else if (action.equals(Parser.GET_ALL_USERS)){
-           String users="";
-           for(int i=0; i < this.usersList.size(); i++){
-               System.out.println("Users SIZE: " + usersActive.size());
-               System.out.println("Users SIZE: " + usersList.get(i).getUsername());
-               users = users + "," + this.usersList.get(i).getUsername();
-           }
+           String users = getAllUsers();
            this.emit(users.getBytes());
            System.out.println("Users string: " +  users.length());
            
        }else if (action.equals(Parser.ACTION_SEND_MESSAGE)){
-           //format sendMessage:::user,me 10:34:45 : hola como estas?
+           //format sendMessage:::user,me > 10:34:45 : hola como estas?
            String temp = parser.breakMessage()[1];
            System.out.println("temp " + temp);
-           String user = this.getNeededByes(temp.split(",")[0].getBytes());
-           String message = this.getNeededByes(temp.split(",")[1].getBytes());
+           String message = preparedMessage(temp);
            
-           System.out.println("USER "+ user + " MESSAGE " + message );
-           
-           //findUser(user);
-           //System.out.println("find: " + findUser(user).UserFormat());
-           this.redirectEmitByUser(message.getBytes(), findUser(user));
-           //System.out.println(form);
+           String user = this.getNeededBytes(temp.split(",")[0].getBytes());
+           sendMessage(user, message, temp);
+          
+       } else if (action.equals(Parser.ACTION_USER_EXIT)){
+           String data = parser.breakMessage()[1];
+           String _user = getNeededBytes(data.getBytes());
+           if(deleteUser(findUser(_user))){
+               String exit = Parser.ACTION_USER_EXIT + Parser.SYMBOL + "ok";
+               this.emit(exit.getBytes());
+           }else {
+               System.out.println("No se pudo eliminar el usuario");
+           }        
        }
   }
+
+    private void sendMessage(String user1, String message, String temp) {
+        if (user1.equals("all")) {
+            for(int i=0; i < usersList.size(); i ++) {
+                redirectEmitByUser(message.getBytes(),
+                        findUser(usersList.get(i).getUsername()));
+            }
+        } else {
+            String me = getNeededBytes((temp.split(",")[1]).split(">")[0].getBytes());
+            System.out.println("me >> " + me);
+            String[] tempUsers = {me, user1};
+            System.out.println("USER " + user1 + " MESSAGE " + message);
+            for(int i=0; i < tempUsers.length; i++){
+                this.redirectEmitByUser(message.getBytes(), findUser(tempUsers[i]));
+            }
+        }
+    }
+
+    private String preparedMessage(String temp) {
+        String message = Parser.ACTION_SEND_MESSAGE + Parser.SYMBOL
+                + this.getNeededBytes(temp.split(",")[1].getBytes());
+        return message;
+    }
+
+    private String getAllUsers() {
+        // getUsers:::,all, hu, df, fr
+        String users = Parser.GET_ALL_USERS + Parser.SYMBOL + ",all";
+        for(int i=0; i < this.usersList.size(); i++){
+            System.out.println("Users SIZE: " + usersActive.size());
+            System.out.println("Users SIZE: " + usersList.get(i).getUsername());
+            users =   users  + "," + this.usersList.get(i).getUsername();
+        }
+        return users;
+    }
+  
+   public boolean deleteUser(User u){
+       return this.usersList.remove(u);
+   }
    
    public User findUser(String username){
        for(int i=0; i< usersList.size(); i++){
@@ -104,7 +142,7 @@ public class Server implements Runnable{
        System.out.println(PORT_CLIENT_TEMP + " " + IP_CLIENT_TEMP + " " + username);
        user = new User( PORT_CLIENT_TEMP, IP_CLIENT_TEMP, username);
         usersList.add(user);
-   }
+   }    
    
    public void redirectEmitByUser(byte buffer_emit[], User user){
       System.out.println("redirect: " + user.UserFormat());
@@ -155,7 +193,7 @@ public class Server implements Runnable{
         }
     }
     
-    public String getNeededByes(byte in[]){
+    public String getNeededBytes(byte in[]){
         String result="";
         boolean stop =  false;
         for(int i=0; i< in.length; i++){

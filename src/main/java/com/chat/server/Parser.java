@@ -14,6 +14,7 @@ public class Parser {
     final static String ACTION_ADD_USER = "addUser";
     final static String ACTION_SEND_MESSAGE = "sendMessage";
     final static String GET_ALL_USERS="getUsers";
+    final static String ACTION_USER_EXIT = "exit";
 
     public String message; 
     public Parser(String message) {
