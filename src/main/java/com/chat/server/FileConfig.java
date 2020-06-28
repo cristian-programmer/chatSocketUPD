@@ -23,8 +23,8 @@ public class FileConfig {
         this.PORT = PORT;
         this.IPServer =  IPServer;
     }
-    public void readFileConfig(){
-        File config = new File("D:\\Documents\\NetBeansProjects\\ChatServer\\src\\main\\java\\com\\chat\\config\\config.cf");
+    public void readFileConfig(String path){
+        File config = new File(path);
         try {
               FileReader fileReader = new FileReader(config);
               BufferedReader buffer =  new BufferedReader(fileReader);

@@ -35,10 +35,14 @@ public class Server implements Runnable{
     
     byte[] buffer_on = new byte[1024];
    
+    public String path;
     
+    public Server(String path){
+        this.path = path;
+    }
     private  void instanceServer(){
         FileConfig config = new FileConfig();
-        config.readFileConfig();
+        config.readFileConfig(path);
         System.out.println("Init Server: " + config.IPserver() + " " + config.getPort());
             try {
                 socket = new DatagramSocket(config.getPort(),
@@ -67,6 +71,11 @@ public class Server implements Runnable{
        }else if (action.equals(Parser.GET_ALL_USERS)){
            String users = getAllUsers();
            this.emit(users.getBytes());
+           
+           for(int i=0; i < usersList.size(); i++){
+               redirectEmitByUser(users.getBytes(), 
+                       findUser(usersList.get(i).getUsername()));
+           }
            System.out.println("Users string: " +  users.length());
            
        }else if (action.equals(Parser.ACTION_SEND_MESSAGE)){
